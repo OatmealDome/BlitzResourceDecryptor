@@ -24,12 +24,27 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SeadRandom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CRC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EncryptionUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlitzResourceDecryptor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SeadRandom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EncryptionUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

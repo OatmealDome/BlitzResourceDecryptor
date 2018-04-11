@@ -22,7 +22,8 @@ int DecryptAes128Cbc(uint8_t* sourceBuffer, uint8_t* destBuffer, int sourceSize,
 	if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv))
 		return -2;
 
-	EVP_CIPHER_CTX_set_key_length(ctx, 128);
+	// Turn off padding
+	EVP_CIPHER_CTX_set_padding(ctx, 0);
 
 	/* Provide the message to be decrypted, and obtain the plaintext output.
 	* EVP_DecryptUpdate can be called multiple times if necessary

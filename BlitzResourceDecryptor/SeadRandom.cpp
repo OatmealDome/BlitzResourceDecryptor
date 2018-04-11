@@ -19,6 +19,23 @@ SeadRandom::SeadRandom(uint32_t seed)
 	*(_DWORD *)(internalData + 12) = 1812433253 * (v4 ^ (v4 >> 30)) + 4;
 }
 
+SeadRandom::SeadRandom(unsigned int seedOne, unsigned int seedTwo, unsigned int seedThree, unsigned int seedFour)
+{
+	if (seedOne | seedTwo | seedThree | seedFour) {
+		*(_DWORD *)internalData = seedOne;
+		*(_DWORD *)(internalData + 4) = seedTwo;
+		*(_DWORD *)(internalData + 8) = seedThree;
+		*(_DWORD *)(internalData + 12) = seedFour;
+	}
+	else
+	{
+		*(_DWORD *)internalData = 0x00000001;
+		*(_DWORD *)(internalData + 4) = 0x6C078967;
+		*(_DWORD *)(internalData + 8) = 0x714ACB41;
+		*(_DWORD *)(internalData + 12) = 0x48077044;
+	}
+}
+
 uint32_t SeadRandom::getU32()
 {
 	unsigned int v1;

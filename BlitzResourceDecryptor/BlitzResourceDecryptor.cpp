@@ -165,7 +165,7 @@ int DecryptSaveFile(char* filePath)
 	// Seek to the end of the file and get the length
 	ifs.seekg(0, std::ios::end);
 	int length = ifs.tellg();
-	int crypte_content_length = 0x30;
+	int crypto_content_length = 0x40;
 	ifs.seekg(0, std::ios::beg);
 
 	// Read into a buffer
@@ -224,7 +224,7 @@ int DecryptSaveFile(char* filePath)
 	fout.write((const char*)fileBytes, 0x10);
 
 	// Then savedata
-	fout.write((const char*)plaintext, length - crypte_content_length);
+	fout.write((const char*)plaintext, length - crypto_content_length);
 
 	// Close the stream
 	fout.close();

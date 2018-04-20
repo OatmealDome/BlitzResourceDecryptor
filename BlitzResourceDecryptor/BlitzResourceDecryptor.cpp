@@ -179,7 +179,10 @@ int DecryptSaveFile(char* filePath)
 	uint8_t ciphertext[0x483A0];
 	uint8_t plaintext[0x483A0];
 	uint8_t keyBuffer[16];
+	uint8_t keyBuffer2[16];
 	uint8_t ivBuffer[16];
+	uint8_t hmac[16];
+	uint8_t hmac_calculated[16];
 
 	// Get seeds for SeadRandom
 	uint32_t seedOne = *(unsigned int *)(fileBytes + 0x483C0);
@@ -193,6 +196,7 @@ int DecryptSaveFile(char* filePath)
 	// Copy the ciphertext and IV into the buffers
 	memcpy(ciphertext, fileBytes + 16, 0x483A0);
 	memcpy(ivBuffer, fileBytes + 0x483B0, 16);
+	memcpy(hmac, fileBytes + 0x483D0, 16);
 
 	// Create the key
 	CreateSaveKey(keyBuffer, &random);
@@ -202,6 +206,15 @@ int DecryptSaveFile(char* filePath)
 	if (ret != 0)
 	{
 		std::cout << "Failed to decrypt save file (" << ret << ")\n";
+		return -1;
+	}
+
+	// Create the HMAC key
+	CreateSaveKey(keyBuffer2, &random);
+	ret = GenerateAes128Cmac(plaintext, hmac_calculated, 0x483A0, keyBuffer2);
+	if (ret != 0 || memcmp(hmac, hmac_calculated, 16) != 0)
+	{
+		std::cout << "Failed to verify decrypt save file (" << ret << ")\n";
 		return -1;
 	}
 

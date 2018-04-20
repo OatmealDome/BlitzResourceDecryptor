@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include <openssl/evp.h>
+#include <openssl/cmac.h>
 
 #include "EncryptionUtil.h"
 
@@ -41,6 +42,31 @@ int DecryptAes128Cbc(uint8_t* sourceBuffer, uint8_t* destBuffer, int sourceSize,
 
 	/* Clean up */
 	EVP_CIPHER_CTX_free(ctx);
+
+	return 0;
+}
+
+int GenerateAes128Cmac(uint8_t* sourceBuffer, uint8_t* destBuffer, int sourceSize, uint8_t* key) {
+	CMAC_CTX *ctx;
+	size_t maclen;
+
+	/* Create and initialise the context */
+	if (!(ctx = CMAC_CTX_new()))
+		return -1;
+
+	if (1 != CMAC_Init(ctx, key, 16, EVP_aes_128_cbc(), NULL)) {
+		return -2;
+	}
+
+	if (1 != CMAC_Update(ctx, sourceBuffer, sourceSize)) {
+		return -3;
+	}
+
+	if (1 != CMAC_Final(ctx, destBuffer, &maclen)) {
+		return -4;
+	}
+
+	CMAC_CTX_free(ctx);
 
 	return 0;
 }

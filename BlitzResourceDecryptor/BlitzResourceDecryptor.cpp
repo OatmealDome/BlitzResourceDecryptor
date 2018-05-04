@@ -49,7 +49,7 @@ void CreateByteSequence(SeadRandom* random, uint8_t* outputBuffer)
 	} while (counter != 16);
 }
 
-void CreateSaveKey(uint8_t* buffer, SeadRandom* random)
+void CreateSaveKey(uint8_t* buffer, SeadRandom* random, int rev)
 {
 	const unsigned int lookupTable[] = { 0x476BC5E7, 0x76DF4A26, 0x2BD714E2, 0x632623A5, 0xD36838ED,
 		0x7583042F, 0x32B3A6CE, 0x301180A2, 0x63479874, 0xB0EEF148,
@@ -65,20 +65,42 @@ void CreateSaveKey(uint8_t* buffer, SeadRandom* random)
 		0x4531F3E8, 0xFDCB1756, 0xF0387032, 0x1F27AC7D, 0x5AD014E2,
 		0x6508E3B3, 0xF13D7C92, 0xD7DA45D4, 0xA01D9485 };
 
+	const unsigned int lookupTable2[] = { 0xDFD0A132, 0x1537D7E5, 0xC8B0F6D5, 0x6C31FED3, 0xB7A1221A,
+		0x9B9DC40C, 0x44315579, 0xF239E05A, 0x87E4D9AF, 0x59EF5961,
+		0xF5AF2DC9, 0xD1521C02, 0x68405262, 0x9864C589, 0x98F5F8BE,
+		0x0C90FE24, 0x9B3FC02A, 0x31E4FD02, 0xEC747B2D, 0x5FC1C04E,
+		0x80D6B732, 0x32BA6CB7, 0x961A5683, 0x33025098, 0xD5676789,
+		0xAB622A5A, 0xF651F93A, 0x130D6D68, 0xEFFEDA48, 0x24E2C2D3,
+		0xEA89C5DD, 0xF04AFA58, 0x767D3A19, 0xBF67B888, 0x54218F00,
+		0x6F461AFF, 0x9A216E37, 0x5861AAD0, 0x3B44CEAE, 0xCD6C9A42,
+		0x0610ECD2, 0x2A894F76, 0x23D72BE9, 0x63FA2D93, 0x2ADC8A10,
+		0xFB0E9F6A, 0x3BE0CE91, 0x80BB93A1, 0xDB8D8FF3, 0x72E21DC7,
+		0x93B0C670, 0x2907C541, 0x3DBF1C6D, 0x62D8924F, 0x3205E36F,
+		0x041C44D5, 0xDACB2490, 0x01D905A9, 0x6C8C579B, 0xE3C54DC2,
+		0xF4583808, 0x76459488, 0x1E5F7C61, 0x2876F360 };
+
 	uint8_t* v3 = buffer;
 	unsigned int v5, v6, v7, v8;
+	const unsigned int * table;
+
+	if (rev >= 2) {
+		table = lookupTable2;
+	}
+	else {
+		table = lookupTable;
+	}
 
 	__int64 v4 = 0LL;
 	do
 	{
 		*(_DWORD *)(v3 + v4) = 0;
-		v5 = lookupTable[(unsigned int)random->getU32() >> 26];
+		v5 = table[(unsigned int)random->getU32() >> 26];
 		*(_DWORD *)(v3 + v4) = ((v5 >> (((unsigned int)random->getU32() >> 27) & 0x18)) & 0xFF | *(_DWORD *)(v3 + v4)) << 8;
-		v6 = lookupTable[(unsigned int)random->getU32() >> 26];
+		v6 = table[(unsigned int)random->getU32() >> 26];
 		*(_DWORD *)(v3 + v4) = ((v6 >> (((unsigned int)random->getU32() >> 27) & 0x18)) & 0xFF | *(_DWORD *)(v3 + v4)) << 8;
-		v7 = lookupTable[(unsigned int)random->getU32() >> 26];
+		v7 = table[(unsigned int)random->getU32() >> 26];
 		*(_DWORD *)(v3 + v4) = ((v7 >> (((unsigned int)random->getU32() >> 27) & 0x18)) & 0xFF | *(_DWORD *)(v3 + v4)) << 8;
-		v8 = lookupTable[(unsigned int)random->getU32() >> 26];
+		v8 = table[(unsigned int)random->getU32() >> 26];
 		uint32_t result = random->getU32();
 		*(_DWORD *)(v3 + v4) |= (v8 >> (((unsigned int)result >> 27) & 0x18)) & 0xFF;
 		v4 += 4LL;
@@ -184,6 +206,9 @@ int DecryptSaveFile(char* filePath)
 	uint8_t hmac[16];
 	uint8_t hmac_calculated[16];
 
+	// revision
+	uint8_t rev = fileBytes[0];
+
 	// Get seeds for SeadRandom
 	uint32_t seedOne = *(unsigned int *)(fileBytes + 0x483C0);
 	uint32_t seedTwo = *(unsigned int *)(fileBytes + 0x483C4);
@@ -199,7 +224,7 @@ int DecryptSaveFile(char* filePath)
 	memcpy(hmac, fileBytes + 0x483D0, 16);
 
 	// Create the key
-	CreateSaveKey(keyBuffer, &random);
+	CreateSaveKey(keyBuffer, &random, rev);
 
 	// Attempt to decrypt the file
 	int ret = DecryptAes128Cbc(ciphertext, plaintext, 0x483A0, keyBuffer, ivBuffer);
@@ -210,7 +235,7 @@ int DecryptSaveFile(char* filePath)
 	}
 
 	// Create the HMAC key
-	CreateSaveKey(keyBuffer2, &random);
+	CreateSaveKey(keyBuffer2, &random, rev);
 	ret = GenerateAes128Cmac(plaintext, hmac_calculated, 0x483A0, keyBuffer2);
 	if (ret != 0 || memcmp(hmac, hmac_calculated, 16) != 0)
 	{
@@ -257,7 +282,7 @@ void PrintUsage()
 
 int main(int argc, char *argv[])
 {
-	std::cout << "BlitzResourceDecryptor for Splatoon 2 v2.3.3 by OatmealDome\n\n";
+	std::cout << "BlitzResourceDecryptor for Splatoon 2 v3.0.0 by OatmealDome and Lean\n\n";
 
 	// Check if a decryption type wasn't even chosen
 	if (argc < 2)
